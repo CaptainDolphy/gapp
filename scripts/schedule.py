@@ -14,9 +14,9 @@ def createCookiesJson():
         context = browser.new_context()
         page = context.new_page()
         page.goto(url)
-        page.get_by_text("Přihlásit přes").click()
+        page.get_by_text("Přihlásit přes").click() 
         page.get_by_role("button", name="Google").click()
-        page.wait_for_url("https://gevo.edookit.net/")
+        page.wait_for_url("https://gevo.edookit.net/", timeout=900000)
 
         cookies = context.cookies()
         ##delani json filu, tohle tam musi byt jinak to nefunguje
@@ -41,19 +41,24 @@ def getTimeTable():
 
 
 
-        
-
-
 def scrapeTimetable(page, checkForExpired):
     expiredEdookit = False
-    html = page.inner_html('#prints-timetable')
-    soup = BeautifulSoup(html, 'html.parser')
-
+    
     if (page.get_by_text("Přihlásit přes").is_visible()) and checkForExpired:
         page.get_by_text("Přihlásit přes").click()
-        page.get_by_role("button", name="Google").click()
+        ## musi byt kvuli edge case kde to redirectne rovnou
+        if (page.get_by_role("button", name="Google").is_visible()):
+            page.get_by_role("button", name="Google").click()
         expiredEdookit = True
 
+    ## tohle taky nekdy to throwne error 500 (zustane to na random strance)
+    if page.url != "https://gevo.edookit.net/":
+        os.remove("cookies.json")
+        createCookiesJson()
+    
+    html = page.inner_html('#prints-timetable')
+    soup = BeautifulSoup(html, 'html.parser')
+    
     classes = soup.find_all('div', {'class':'hoverLesson'})
     data = []
 
@@ -81,7 +86,6 @@ def scrapeTimetable(page, checkForExpired):
         os.remove("cookies.json") 
 
         
-
 
 if os.path.isfile('cookies.json') == False:
     createCookiesJson()
