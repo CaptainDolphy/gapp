@@ -2,19 +2,13 @@ import json
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 
-url = 'https://gevo.edookit.net/user/login'
+url = "https://gevo.edookit.net/user/login"
 
 with sync_playwright() as p:
-    
-    browser = p.chromium.launch(headless=True,)
-    context = browser.new_context(storage_state="edookit.json")
+    browser = p.chromium.launch(headless=True)
+    context = browser.new_context(storage_state="cookies.json")
     page = context.new_page()
     page.goto(url)
-
-    if (page.get_by_text("Přihlásit přes").is_visible()):
-        page.get_by_text("Přihlásit přes").click()
-        page.get_by_role("button", name="Google").click()
-        print("remake edookit.json")
 
     html = page.inner_html('#prints-timetable')
     soup = BeautifulSoup(html, 'html.parser')
