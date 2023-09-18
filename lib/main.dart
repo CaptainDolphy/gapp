@@ -7,6 +7,57 @@ import 'package:webview_flutter/webview_flutter.dart';
 void main() {
   runApp(MyApp());
 }
+enum _MenuOptions {
+  listCookies,
+}
+class Menu extends StatefulWidget {
+  const Menu({required this.controller, super.key});
+
+  final WebViewController controller;
+
+  @override
+  State<Menu> createState() => _MenuState();
+}
+
+class _MenuState extends State<Menu> {
+  final cookieManager = WebViewCookieManager();
+  // Add this line
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<_MenuOptions>(
+      onSelected: (value) async {
+        switch (value) {
+          case _MenuOptions.listCookies:
+            await _onListCookies(widget.controller);
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem<_MenuOptions>(
+          value: _MenuOptions.listCookies,
+          child: Text('List cookies'),
+        )
+      ],
+    );
+  }
+
+  Future<void> _onListCookies(WebViewController controller) async {
+    final String cookies = await controller
+        .runJavaScriptReturningResult('document.cookie') as String;
+    print(cookies);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(cookies.isNotEmpty ? cookies : 'There are no cookies.'),
+      ),
+    );
+  }
+}
+
+
+
+
+
 
 class MyApp extends StatefulWidget {
   @override
@@ -14,20 +65,20 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final _cookieManager = WebviewCookieManager();
+  final cookieManager = WebviewCookieManager();
 
   final String _url = 'https://gevo.edookit.net/';
   final String cookieValue = 'some-cookie-value';
   final String domain = 'youtube.com';
   final String cookieName = 'some_cookie_name';
-  late  WebViewController _controller;
+  late final WebViewController controller;
 
 
   @override
   void initState() {
     super.initState();
-    _cookieManager.clearCookies();
-    _controller = WebViewController()
+    cookieManager.clearCookies();
+    controller = WebViewController()
       ..loadRequest(
         Uri.parse(_url),
       )
@@ -36,22 +87,25 @@ class _MyAppState extends State<MyApp> {
           "Mozilla/5.0 (Linux; Android 4.4.4; One Build/KTU84L.H4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.135 Mobile Safari/537.36"
       );
 
-      _controller.setNavigationDelegate(
+
+      controller.setNavigationDelegate(
         NavigationDelegate(
             onPageFinished: (url) {
-            getCookies(_controller,_cookieManager);
+            getCookies(controller,cookieManager);
             }
         )
       );
-    }
   }
 
-  void getCookies(_controller, _cookieManager) {
-    if (_controller.currentUrl() != "https://gevo.edookit.net/") {
-      var cookies = _cookieManager.getCookies(_controller.currentUrl());
-      print(cookies);
-    }
+
+  void getCookies(controller, cookieManager) async {
+    Menu(controller: controller);
+    final String cookies = await controller
+        .runJavaScriptReturningResult('document.cookie') as String;
+    print(cookies);
+
   }
+
 
 
   @override
@@ -61,18 +115,13 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
           actions: [
-            IconButton(
-              icon: Icon(Icons.ac_unit),
-              onPressed: () async {
-                // TEST CODE
-                var _cookieManager;
-                await _cookieManager.getCookies(null);
-              },
-            )
+            Menu(controller: controller)
+                //await cookieManager.getCookies(null);
+
           ],
         ),
         body: WebViewWidget(
-          controller: _controller,
+          controller: controller,
           /*onWebViewCreated: (controller) async {
             await cookieManager.setCookies([
               Cookie(cookieName, cookieValue)
