@@ -66,18 +66,13 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final cookieManager = WebviewCookieManager();
-
   final String _url = 'https://gevo.edookit.net/';
-  final String cookieValue = 'some-cookie-value';
-  final String domain = 'youtube.com';
-  final String cookieName = 'some_cookie_name';
   late final WebViewController controller;
 
 
   @override
   void initState() {
     super.initState();
-    cookieManager.clearCookies();
     controller = WebViewController()
       ..loadRequest(
         Uri.parse(_url),
@@ -86,7 +81,6 @@ class _MyAppState extends State<MyApp> {
       ..setUserAgent(
           "Mozilla/5.0 (Linux; Android 4.4.4; One Build/KTU84L.H4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.135 Mobile Safari/537.36"
       );
-
 
       controller.setNavigationDelegate(
         NavigationDelegate(
@@ -97,15 +91,11 @@ class _MyAppState extends State<MyApp> {
       );
   }
 
-
   void getCookies(controller, cookieManager) async {
     Menu(controller: controller);
     final String cookies = await controller
         .runJavaScriptReturningResult('document.cookie') as String;
-    print(cookies);
-
   }
-
 
 
   @override
@@ -116,26 +106,10 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
           actions: [
             Menu(controller: controller)
-                //await cookieManager.getCookies(null);
-
           ],
         ),
         body: WebViewWidget(
           controller: controller,
-          /*onWebViewCreated: (controller) async {
-            await cookieManager.setCookies([
-              Cookie(cookieName, cookieValue)
-                ..domain = domain
-                ..expires = DateTime.now().add(Duration(days: 10))
-                ..httpOnly = false
-            ]);
-          },
-          onPageFinished: (_) async {
-            final gotCookies = await cookieManager.getCookies(_url);
-            for (var item in gotCookies) {
-              print(item);
-            }
-          },*/
         ),
       ),
     );
