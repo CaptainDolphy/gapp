@@ -95,6 +95,7 @@ class _MyAppState extends State<MyApp> {
     Menu(controller: controller);
     final String cookies = await controller
         .runJavaScriptReturningResult('document.cookie') as String;
+    print(cookieManager.getCookies());
   }
 
 
